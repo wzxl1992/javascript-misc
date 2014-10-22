@@ -13,12 +13,35 @@
  * */
 function onReady() {
     //get a reference to the form
+    var ageForm = document.getElementById('age-form');
+
 
     //add an event listener for the 'submit' event passing onSubmit as the event handler function
+    ageForm.addEventListener('submit', onSubmit);
 
+    if (window.localStorage) {
+        ageForm.elements['name'].value = window.localStorage.getItem('defaultName');
+    }
     //add an event listener for the 'click' event on the exit button
     //for this one we will use an inline anonymous function so that you can get used to those
+    var exitButton = document.getElementById('exit-button');
+    exitButton.addEventListener('click', function() {
+        if (window.confirm('Are you really sure you want to leave? I worked really hard on this!')) {
+            window.location = 'http://www.google.com';
+        }
+    });
 
+    var resetButton = document.getElementById('reset-button');
+    resetButton.addEventListener('click', function () {
+        document.getElementById('age-message').style.display = 'none';
+    });
+
+    var nameInput = ageForm.elements['name'];
+    nameInput.addEventListener('change', function () {
+        if (window.localStorage) {
+            window.localStorage.setItem('defaultName', this.value);
+        }
+    });
 } //onReady()
 
 //call onReady() when the DOMContentLoaded event is raised
@@ -38,10 +61,22 @@ function onSubmit(eventObject) {
     //remember that 'this' refers to the object that raised the event (i.e., the form)
 
     //get the name and the date-of-birth value
+    var name = this.elements['name'].value;
+    var dob = this.elements['dob'].value;
 
-    //calculate the age
+    console.log(dob);
 
-    //display the name and age
+    try {
+        //calculate the age
+        var age = calculateAge(dob);
+        //display the name and age
+        displayAge(name, age);
+    }
+    catch(exception){
+        displayError(exception);
+    }
+
+
 
     //if the event object has a method called preventDefault,
     //call it to stop the browser from submitting the form
@@ -69,8 +104,22 @@ function onSubmit(eventObject) {
  *   age in years [number]
  */
 function calculateAge(dob) {
+    if (!dob) {
+        throw new Error('Please tell me when you were born!');
+    }
     //calculate the person's age based on the date-of-birth
+    /*var today = new Date();
+    dob = new Date(dob);
+    var yearsDiff = today.getFullYear() - dob.getUTCFullYear();
+    var monthDiff = today.getMonth() - dob.getUTCMonth();
+    var daysDiff = today.getDate() - dob.getUTCDate();
 
+    if (monthDiff < 0 ||(0 === monthDiff && daysDiff < 0 )) {
+        yearsDiff--;
+    }
+
+    return yearsDiff;*/
+    return moment().diff(dob, 'years');
 } //calculateAge()
 
 /* displayAge()
@@ -81,7 +130,12 @@ function calculateAge(dob) {
  *   age - [number or string] age of person
  * */
 function displayAge(name, age) {
+    var nameRegEx = new RegExp('^\\D+$');
+    if (!nameRegEx.test(name)) {
+        throw new Error('Your name cannot contain numbers!');
+    }
     //use displayMessage() to display the name and age
+    displayMessage(name + ', you are ' + age + 'year old!');
 
 } //displayAge()
 
@@ -93,6 +147,7 @@ function displayAge(name, age) {
  * */
 function displayError(error) {
     //use displayMessage to display the error
+    displayMessage(error, true);
 
 } //displayError()
 
@@ -104,5 +159,8 @@ function displayError(error) {
  *   isError - [boolean, default=false] set to true if this is an error message
  * */
 function displayMessage(message, isError) {
-
+    var msgElem = document.getElementById('age-message');
+    msgElem.innerHTML = message;
+    msgElem.className = isError ? 'alert alert-danger' : 'alert alert-success';
+    msgElem.style.display = 'block';
 } //displayMessage()
